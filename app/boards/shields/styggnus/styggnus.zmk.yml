@@ -1,0 +1,14 @@
+file_format: "1"
+id: styggnus
+name: Styggnus
+type: shield
+url: https://github.com/foostan/crkbd/
+requires: [pro_micro]
+exposes: [i2c_oled]
+features:
+  - keys
+  - display
+  - underglow
+siblings:
+  - styggnus_left
+  - styggnus_right
