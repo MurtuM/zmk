@@ -1,0 +1,13 @@
+# Copyright (c) 2021 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: MurtuM Macro Behavior
+
+compatible: "zmk,behavior-murtum-macro"
+
+include: one_param.yaml
+
+properties:
+  usage-pages:
+    type: array
+    required: true

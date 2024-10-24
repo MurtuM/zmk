@@ -1,0 +1,23 @@
+/*
+ * Copyright (c) 2021 The ZMK Contributors
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+#include <dt-bindings/zmk/behaviors.h>
+#include <dt-bindings/zmk/keys.h>
+
+/ {
+    behaviors {
+#if ZMK_BEHAVIOR_OMIT(MURTUM_MACRO)
+    /omit-if-no-ref/
+#endif
+        murtum_macro: murtum_macro {
+            compatible = "zmk,behavior-murtum-macro";
+            #binding-cells = <1>;
+            usage-pages = <HID_USAGE_KEY>;
+            display-name = "MurtuM Macro";
+        };
+    };
+};
+

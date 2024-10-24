@@ -17,6 +17,7 @@
 #include <behaviors/outputs.dtsi>
 #include <behaviors/caps_word.dtsi>
 #include <behaviors/key_repeat.dtsi>
+#include <behaviors/murtum_macro.dtsi>
 #include <behaviors/backlight.dtsi>
 #include <behaviors/macros.dtsi>
 #include <behaviors/mouse_key_press.dtsi>
