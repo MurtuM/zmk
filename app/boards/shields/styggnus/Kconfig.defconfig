@@ -1,4 +1,4 @@
-if SHIELD_STYGGNUS_LEFT
+if SHIELD_STYGGNUS_DONGLE
 
 config ZMK_KEYBOARD_NAME
     default "Styggnus"
@@ -8,10 +8,12 @@ config ZMK_SPLIT_ROLE_CENTRAL
 
 endif
 
-if SHIELD_STYGGNUS_LEFT || SHIELD_STYGGNUS_RIGHT
+if SHIELD_STYGGNUS_LEFT || SHIELD_STYGGNUS_RIGHT || SHIELD_STYGGNUS_DONGLE
 
 config ZMK_SPLIT
     default y
+
+endif
 
 if ZMK_DISPLAY
 
@@ -21,7 +23,7 @@ config I2C
 config SSD1306
     default y
 
-endif # ZMK_DISPLAY
+endif
 
 if LVGL
 
@@ -37,7 +39,5 @@ config LV_Z_BITS_PER_PIXEL
 choice LV_COLOR_DEPTH
     default LV_COLOR_DEPTH_1
 endchoice
-
-endif # LVGL
 
 endif
