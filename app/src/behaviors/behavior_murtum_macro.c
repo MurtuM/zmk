@@ -57,7 +57,7 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
     const struct device *dev = zmk_behavior_get_binding(binding->behavior_dev);
     struct behavior_murtum_macro_data *data = dev->data;
 
-    LOG_DBG("murtum_macro (%d) param: %d", event.position, binding->param1);
+    LOG_DBG("murtum_macro (%d) param: %d cursor: %d", event.position, binding->param1, data->cursor);
 
     if (binding->param1 == MM_RECORD)
     {
@@ -67,7 +67,7 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
         return ZMK_BEHAVIOR_OPAQUE;
     }
     
-    if (binding->param1 == MM_PLAYBACK)
+    if (binding->param1 == MM_PLAYBACK && data->cursor > 0)
     {
         data->recording = false;
 
@@ -77,16 +77,18 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
             struct zmk_keycode_state_changed* kp = &data->macro[i];
 
             kp->timestamp = t;
-            kp->state = true;
-            raise_zmk_keycode_state_changed(*kp);
-            
             t += 10;
 
-            kp->timestamp = t;
-            kp->state = false;
-            raise_zmk_keycode_state_changed(*kp);
+            if (kp->state)
+            {
+                LOG_DBG("MM DOWN: up: %d keycode: %d imod: %hd emod: %hd time: %lld", kp->usage_page, kp->keycode, kp->implicit_modifiers, kp->explicit_modifiers, kp->timestamp);
+            }
+            else
+            {
+                LOG_DBG("MM UP: up: %d keycode: %d imod: %hd emod: %hd time: %lld", kp->usage_page, kp->keycode, kp->implicit_modifiers, kp->explicit_modifiers, kp->timestamp);
+            }
 
-            t += 10;
+            raise_zmk_keycode_state_changed(*kp);
         }
 
         return ZMK_BEHAVIOR_OPAQUE;
@@ -118,7 +120,12 @@ static const struct device *devs[DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT)];
 
 static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
     struct zmk_keycode_state_changed *ev = as_zmk_keycode_state_changed(eh);
-    if (ev == NULL || !ev->state) {
+    // if (ev == NULL || !ev->state) {
+    //     return ZMK_EV_EVENT_BUBBLE;
+    // }
+
+    if (ev == NULL)
+    {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
@@ -144,7 +151,7 @@ static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
             if (config->usage_pages[u] == ev->usage_page) 
             {
                 memcpy(&data->macro[data->cursor], ev, sizeof(struct zmk_keycode_state_changed));
-                data->macro[data->cursor].implicit_modifiers |= zmk_hid_get_explicit_mods();
+                // data->macro[data->cursor].implicit_modifiers |= zmk_hid_get_explicit_mods();
                 data->cursor++;
                 break;
             }
