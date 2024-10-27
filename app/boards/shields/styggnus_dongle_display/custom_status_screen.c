@@ -11,15 +11,18 @@
 #include "widgets/layer_status.h"
 #include "widgets/output_status.h"
 #include "widgets/hid_indicators.h"
+#include "widgets/gaming_indicator.h"
+#include "widgets/murtum_macro_status.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-static struct zmk_widget_output_status output_status_widget;
-static struct zmk_widget_layer_status layer_status_widget;
+// static struct zmk_widget_output_status output_status_widget;
+static struct zmk_widget_gaming_indicator gaming_indicator_widget;
 static struct zmk_widget_peripheral_battery_status peripheral_battery_status_widget;
 static struct zmk_widget_modifiers modifiers_widget;
 static struct zmk_widget_bongo_cat bongo_cat_widget;
+static struct zmk_widget_murtum_macro_status murtum_macro_widget;
 
 #if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
 static struct zmk_widget_hid_indicators hid_indicators_widget;
@@ -38,13 +41,16 @@ lv_obj_t *zmk_display_status_screen() {
     lv_style_set_text_line_space(&global_style, 1);
     lv_obj_add_style(screen, &global_style, LV_PART_MAIN);
     
-    zmk_widget_output_status_init(&output_status_widget, screen);
-    lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
-    
+    // zmk_widget_output_status_init(&output_status_widget, screen);
     zmk_widget_bongo_cat_init(&bongo_cat_widget, screen);
-    lv_obj_align(zmk_widget_bongo_cat_obj(&bongo_cat_widget), LV_ALIGN_BOTTOM_RIGHT, 0, -7);
-
     zmk_widget_modifiers_init(&modifiers_widget, screen);
+    zmk_widget_gaming_indicator_init(&gaming_indicator_widget, screen);
+    zmk_widget_peripheral_battery_status_init(&peripheral_battery_status_widget, screen);
+    zmk_widget_murtum_macro_status_init(&murtum_macro_widget, screen);
+
+    lv_obj_align(murtum_macro_widget.obj, LV_ALIGN_TOP_LEFT, 0, 0);
+    // lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_align(zmk_widget_bongo_cat_obj(&bongo_cat_widget), LV_ALIGN_BOTTOM_RIGHT, 0, -7);
     lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_BOTTOM_LEFT, 0, 0);
     
     #if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
@@ -52,11 +58,7 @@ lv_obj_t *zmk_display_status_screen() {
     lv_obj_align_to(zmk_widget_hid_indicators_obj(&hid_indicators_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_TOP_LEFT, 0, -2);
     #endif
 
-    zmk_widget_layer_status_init(&layer_status_widget, screen);
-    // lv_obj_align(zmk_widget_layer_status_obj(&layer_status_widget), LV_ALIGN_BOTTOM_LEFT, 2, -18);
-    lv_obj_align_to(zmk_widget_layer_status_obj(&layer_status_widget), zmk_widget_bongo_cat_obj(&bongo_cat_widget), LV_ALIGN_BOTTOM_LEFT, 0, 5);
-
-    zmk_widget_peripheral_battery_status_init(&peripheral_battery_status_widget, screen);
+    lv_obj_align_to(gaming_indicator_widget.obj, bongo_cat_widget.obj, LV_ALIGN_BOTTOM_LEFT, 0, 5);
     lv_obj_align(zmk_widget_peripheral_battery_status_obj(&peripheral_battery_status_widget), LV_ALIGN_TOP_RIGHT, 0, 0);
 
     return screen;

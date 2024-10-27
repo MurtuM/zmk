@@ -1,5 +1,7 @@
 #define DT_DRV_COMPAT zmk_behavior_murtum_macro
 
+#include "behavior_murtum_macro.h"
+
 #include <zephyr/device.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
@@ -40,10 +42,6 @@ struct behavior_murtum_macro_config {
     uint16_t usage_pages[];
 };
 
-#define MM_MACRO_SIZE 128
-#define MM_RECORD 0
-#define MM_PLAYBACK 1
-
 struct behavior_murtum_macro_data {
     struct zmk_keycode_state_changed macro[MM_MACRO_SIZE];
     bool restart_cursor;
@@ -63,6 +61,8 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
     {
         data->recording = !data->recording;
         data->restart_cursor = true;
+
+        raise_zmk_murtum_macro_state_changed(data);
 
         return ZMK_BEHAVIOR_OPAQUE;
     }
@@ -129,7 +129,8 @@ static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
 
-    for (int i = 0; i < DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT); i++) {
+    for (int i = 0; i < DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT); i++) 
+    {
         const struct device *dev = devs[i];
         if (dev == NULL) {
             continue;
@@ -156,9 +157,42 @@ static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
                 break;
             }
         }
+
+        raise_zmk_murtum_macro_state_changed(data);
     }
 
     return ZMK_EV_EVENT_BUBBLE;
+}
+
+bool MurtuMMacroIsRecording()
+{
+    if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
+        return false;
+
+    const struct behavior_murtum_macro_data *data = devs[0]->data;
+
+    return data->recording;
+}
+
+bool GetMurtuMMacroStatus(bool* recording, int* num_entries, uint32_t* macro)
+{
+    if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
+        return false;
+
+    const struct behavior_murtum_macro_data *data = devs[0]->data;
+
+    *recording = data->recording;
+
+    int reported_keys = 0;
+    for (int i = 0; i < data->cursor; i++)
+    {
+        if (data->macro[i].state)
+            macro[reported_keys++] = data->macro[i].keycode;
+    }
+
+    *num_entries = reported_keys;
+
+    return true;
 }
 
 static int behavior_murtum_macro_init(const struct device *dev) {
@@ -169,6 +203,7 @@ static int behavior_murtum_macro_init(const struct device *dev) {
     data->recording = false;
     data->restart_cursor = true;
     data->cursor = 0;
+
     return 0;
 }
 
