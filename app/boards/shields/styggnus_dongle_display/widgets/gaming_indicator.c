@@ -29,15 +29,15 @@ struct layer_status_state {
 #define LAYER_NAV 3
 #define LAYER_FROW 4
 
-extern bool MurtuMMacroIsRecording();
+// extern bool MurtuMMacroIsRecording();
 
 static void set_layer_symbol(lv_obj_t *label, struct layer_status_state state) 
 {
-    if (MurtuMMacroIsRecording())
-    {
-        lv_label_set_text(label, "<REC>");
-        return;
-    }
+    // if (MurtuMMacroIsRecording())
+    // {
+    //     lv_label_set_text(label, "<REC>");
+    //     return;
+    // }
 
     if (zmk_keymap_layer_state() & (BIT(LAYER_GAMING)))
     {

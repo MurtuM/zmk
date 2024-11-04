@@ -3,7 +3,8 @@
     "*.overlay": "dts",
     "*.keymap": "dts",
     "layer_state_changed.h": "c",
-    "chrono": "c"
+    "chrono": "c",
+    "murtum_macro_state_changed.h": "c"
   },
   "python.formatting.provider": "black",
   "[c]": {

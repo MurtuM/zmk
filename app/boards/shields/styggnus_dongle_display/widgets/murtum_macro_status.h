@@ -15,3 +15,4 @@ struct zmk_widget_murtum_macro_status {
 };
 
 int zmk_widget_murtum_macro_status_init(struct zmk_widget_murtum_macro_status *widget, lv_obj_t *parent);
+void zmk_widget_murtum_macro_status_add_to_hide(lv_obj_t* obj);

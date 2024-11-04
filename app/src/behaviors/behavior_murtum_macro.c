@@ -10,6 +10,7 @@
 
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/events/murtum_macro_state_changed.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -49,6 +50,41 @@ struct behavior_murtum_macro_data {
     int cursor;
 };
 
+static char to_char(uint32_t Keycode)
+{
+    switch(Keycode)
+    {
+        case 44: return ' ';
+        case 41: return 'e';
+        case 39: return '0';
+        default: 
+            if (Keycode >= 30 && Keycode < 39)
+                return Keycode + 19;
+        return Keycode + 61;
+    }
+}
+
+static void RaiseMMEvent(struct behavior_murtum_macro_data* data)
+{
+    struct zmk_murtum_macro_state_changed sc;
+    sc.recording = data->recording;
+    sc.num_entries = 0;
+
+    for (int i = 0; i < data->cursor; i++)
+    {
+        struct zmk_keycode_state_changed* kp = &data->macro[i];
+
+        if (!kp->state)
+            continue;
+        
+        sc.macro[sc.num_entries++] = to_char(kp->keycode);
+    }
+
+    LOG_DBG("murtum_macro RaiseMMEvent num_entries: %d", sc.num_entries);
+
+    raise_zmk_murtum_macro_state_changed(sc);
+}
+
 static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
                                          struct zmk_behavior_binding_event event) 
 {
@@ -62,7 +98,7 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
         data->recording = !data->recording;
         data->restart_cursor = true;
 
-        raise_zmk_murtum_macro_state_changed(data);
+        RaiseMMEvent(data);
 
         return ZMK_BEHAVIOR_OPAQUE;
     }
@@ -70,6 +106,8 @@ static int on_murtum_macro_binding_pressed(struct zmk_behavior_binding *binding,
     if (binding->param1 == MM_PLAYBACK && data->cursor > 0)
     {
         data->recording = false;
+        
+        RaiseMMEvent(data);
 
         uint64_t t = k_uptime_get();
         for (int i = 0; i < data->cursor; i++)
@@ -139,13 +177,15 @@ static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
         struct behavior_murtum_macro_data *data = dev->data;
         const struct behavior_murtum_macro_config *config = dev->config;
 
-        if (!data->recording || data->cursor >= MM_MACRO_SIZE)
+        if (!data->recording)
             continue;
 
         if (data->restart_cursor)
             data->cursor = 0;
-        
         data->restart_cursor = false;
+
+        if (data->cursor >= MM_MACRO_SIZE)
+            continue;
 
         for (int u = 0; u < config->usage_pages_count; u++) 
         {
@@ -154,46 +194,46 @@ static int murtum_macro_keycode_state_changed_listener(const zmk_event_t *eh) {
                 memcpy(&data->macro[data->cursor], ev, sizeof(struct zmk_keycode_state_changed));
                 // data->macro[data->cursor].implicit_modifiers |= zmk_hid_get_explicit_mods();
                 data->cursor++;
+                RaiseMMEvent(data);
                 break;
             }
         }
-
-        raise_zmk_murtum_macro_state_changed(data);
+        
     }
 
     return ZMK_EV_EVENT_BUBBLE;
 }
 
-bool MurtuMMacroIsRecording()
-{
-    if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
-        return false;
+// bool MurtuMMacroIsRecording()
+// {
+//     if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
+//         return false;
 
-    const struct behavior_murtum_macro_data *data = devs[0]->data;
+//     const struct behavior_murtum_macro_data *data = devs[0]->data;
 
-    return data->recording;
-}
+//     return data->recording;
+// }
 
-bool GetMurtuMMacroStatus(bool* recording, int* num_entries, uint32_t* macro)
-{
-    if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
-        return false;
+// bool GetMurtuMMacroStatus(bool* recording, int* num_entries, uint32_t* macro)
+// {
+//     if (DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) == 0 || devs[0] == NULL)
+//         return false;
 
-    const struct behavior_murtum_macro_data *data = devs[0]->data;
+//     const struct behavior_murtum_macro_data *data = devs[0]->data;
 
-    *recording = data->recording;
+//     *recording = data->recording;
 
-    int reported_keys = 0;
-    for (int i = 0; i < data->cursor; i++)
-    {
-        if (data->macro[i].state)
-            macro[reported_keys++] = data->macro[i].keycode;
-    }
+//     int reported_keys = 0;
+//     for (int i = 0; i < data->cursor; i++)
+//     {
+//         if (data->macro[i].state)
+//             macro[reported_keys++] = data->macro[i].keycode;
+//     }
 
-    *num_entries = reported_keys;
+//     *num_entries = reported_keys;
 
-    return true;
-}
+//     return true;
+// }
 
 static int behavior_murtum_macro_init(const struct device *dev) {
     const struct behavior_murtum_macro_config *config = dev->config;
